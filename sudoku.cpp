@@ -28,6 +28,7 @@ constexpr inline T isqrt(T val)
 
 
 using fast = uint_fast8_t;
+using index = fast; // uint_fast16_t;
 using sud  = uint_fast8_t;
 
 
@@ -151,26 +152,26 @@ class grid
             return true;
         };
 
-        for (int_fast8_t i = 0; i < Size; i++)
+        for (fast i = 0; i < Size; i++)
         {
             if (!cond(at(x, i)))
                 return false;
         }
         bits.reset();
 
-        for (int_fast8_t i = 0; i < Size; i++)
+        for (fast i = 0; i < Size; i++)
         {
             if (!cond(at(i, y)))
                 return false;
         }
         bits.reset();
 
-        int_fast8_t i = x / block(),
+        fast i = x / block(),
                     j = y / block();
 
-        for (int_fast8_t y = 0; y < block(); y++)
+        for (fast y = 0; y < block(); y++)
         {
-            for (int_fast8_t x = 0; x < block(); x++)
+            for (fast x = 0; x < block(); x++)
             {
                 if (!cond(at(x + i * block(), y + j * block())))
                     return false;
@@ -182,11 +183,11 @@ class grid
     }
 
 public:
-    grid(std::array<sud, Size * Size> data)
+    constexpr grid(std::array<sud, Size * Size> data)
         : data(std::move(data))
     { }
 
-    grid() = default;
+    constexpr grid() = default;
 
     bool check() const
     {
@@ -203,7 +204,16 @@ public:
         return check_lambda(bits, cond, [](const auto&) { return true; });
     }
 
-    bool validate() const
+    bool possible_at(sud val, sud x, sud y)
+    {
+        auto prev = at(x, y);
+        at(x, y) = val;
+        bool ok = check();
+        at(x, y) = prev;
+        return ok;
+    }
+
+    constexpr bool validate() const
     {
         auto opts = bag<Size>{};
         for (fast y = 0; y < Size; y++)
@@ -218,16 +228,7 @@ public:
         return true;
     }
 
-    bool possible_at(sud val, sud x, sud y)
-    {
-        auto prev = at(x, y);
-        at(x, y) = val;
-        bool ok = check();
-        at(x, y) = prev;
-        return ok;
-    }
-
-    auto solve_rec(fast i, grid& gr, bag<Size>& opts) const
+    auto solve_rec(index i, grid& gr, bag<Size>& opts) const
         -> std::optional<grid>
     {
         for (; i < gr.data.size(); i++)
@@ -235,7 +236,7 @@ public:
             if (gr.data[i] != 0)
                 continue;
 
-            auto x = i % Size,
+            fast x = i % Size,
                  y = i / Size;
 
             for (fast j = 1; j <= Size; j++)
@@ -284,8 +285,8 @@ public:
 
     static constexpr sud block() { return isqrt(Size); }
 
-    const sud& at(sud x, sud y) const { return data[x + y * Size]; }
-          sud& at(sud x, sud y)       { return data[x + y * Size]; }
+    constexpr const sud& at(sud x, sud y) const { return data[x + y * Size]; }
+    constexpr       sud& at(sud x, sud y)       { return data[x + y * Size]; }
 };
 
 
