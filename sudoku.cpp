@@ -61,7 +61,7 @@ class bag
         return (y / 3) * block() + (x / 3);
     }
 
-    void _set(sud x, sud y, sud val, bool b)
+    constexpr void _set(sud x, sud y, sud val, bool b)
     {
         rows[y][val - 1] = b;
         cols[x][val - 1] = b;
@@ -69,17 +69,17 @@ class bag
     }
 
 public:
-    void set(sud x, sud y, sud val)
+    constexpr void set(sud x, sud y, sud val)
     {
         _set(x, y, val, true);
     }
 
-    void reset(sud x, sud y, sud val)
+    constexpr void reset(sud x, sud y, sud val)
     {
         _set(x, y, val, false);
     }
 
-    bool possible(sud x, sud y, sud val) const
+    constexpr bool possible(sud x, sud y, sud val) const
     {
         val -= 1;
         return !rows[y][val]
