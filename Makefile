@@ -4,7 +4,7 @@ CXXFLAGS = -std=c++17 -pedantic -Wall -Wextra -O2 -DNDEBUG
 
 TARGET = sudoku
 
-SRC = sudoku.cpp
+SRC = main.cpp
 
 OBJ    = $(SRC:.cpp=.o)
 DEPEND = $(OBJ:.o=.d)
