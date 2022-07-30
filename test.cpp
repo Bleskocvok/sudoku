@@ -54,7 +54,6 @@ void random_tests()
     for (long i = 0; i < COUNT; i++)
     {
         auto s = sudoku::generate(21, rand);
-        print(s);
         solvable(s);
     }
 }

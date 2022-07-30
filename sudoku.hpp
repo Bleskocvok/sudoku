@@ -43,13 +43,13 @@ struct range
 {
     struct iterator
     {
+        T val;
+
         using value_type = T;
         using difference_type = T;
         using reference = T&;
         using pointer = T*;
         using iterator_category = std::forward_iterator_tag;
-
-        T val;
 
         constexpr reference operator*() { return val; }
         constexpr iterator& operator++() { ++val; return *this; }
@@ -134,6 +134,11 @@ public:
     constexpr grid() = default;
 
     static constexpr auto size() { return Size; }
+
+    static constexpr sud block() { return isqrt(Size); }
+
+    constexpr const sud& at(sud x, sud y) const { return data[x + y * Size]; }
+    constexpr       sud& at(sud x, sud y)       { return data[x + y * Size]; }
 
     constexpr bool check() const
     {
@@ -258,7 +263,6 @@ public:
         {
             auto res = std::vector<std::pair<sud, sud>>{};
             res.reserve(Size * Size);
-
             for (int x = 0; x < Size; x++)
                 for (int y = 0; y < Size; y++)
                     res.emplace_back(x, y);
@@ -276,11 +280,6 @@ public:
 
         return *res;
     }
-
-    static constexpr sud block() { return isqrt(Size); }
-
-    constexpr const sud& at(sud x, sud y) const { return data[x + y * Size]; }
-    constexpr       sud& at(sud x, sud y)       { return data[x + y * Size]; }
 };
 
 
