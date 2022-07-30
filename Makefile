@@ -32,7 +32,7 @@ $(TARGET): $(OBJ)
 
 
 clean:
-	$(RM) $(OBJ) $(DEPEND)
+	$(RM) $(OBJ) $(T_OBJ) $(DEPEND)
 
 distclean: clean
 	$(RM) $(TARGET) $(TEST)

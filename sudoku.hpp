@@ -9,21 +9,9 @@
 #include <vector>       // vector
 #include <iterator>     // back_inserter
 #include <utility>      // move, pair
-#include <map>
+#include <iterator>     // forward_iterator_tag
 
 #include <stdint.h>
-
-
-template<typename T>
-constexpr inline T isqrt(T val)
-{
-    for (T i(0); i < val; i++)
-    {
-        if (i * i >= val)
-            return i;
-    }
-    return T(0);
-}
 
 
 using fast = uint_fast8_t;
@@ -37,6 +25,42 @@ class grid;
 
 template<uint8_t Size>
 void print(const grid<Size>& g, std::ostream& out = std::cout);
+
+
+template<typename T>
+constexpr inline T isqrt(T val)
+{
+    for (T i(0); i < val; i++)
+        if (i * i >= val)
+            return i;
+    return T(0);
+}
+
+
+template<typename T, fast Begin, fast End>
+struct range
+{
+    struct iterator
+    {
+        using value_type = T;
+        using difference_type = T;
+        using reference = T&;
+        using pointer = T*;
+        using iterator_category = std::forward_iterator_tag;
+
+        T val;
+
+        constexpr reference operator*() { return val; }
+        constexpr iterator& operator++() { ++val; return *this; }
+        constexpr bool operator!=(const iterator& other) const
+        {
+            return val != other.val;
+        }
+    };
+
+    constexpr iterator begin() const { return iterator{ Begin }; }
+    constexpr iterator end()   const { return iterator{ End   }; }
+};
 
 
 template <uint8_t Size>
@@ -148,7 +172,13 @@ public:
         return ok;
     }
 
-    auto solve_rec(index i, grid& gr, bag<Size>& opts) const
+    template<typename Seq, typename Shuffle, typename Step>
+    auto solve_rec_f(index i,
+                     grid& gr,
+                     bag<Size>& opts,
+                     Seq seq,
+                     Shuffle shuffle,
+                     Step step) const
         -> std::optional<grid>
     {
         for (; i < gr.data.size(); i++)
@@ -159,7 +189,8 @@ public:
             fast x = i % Size,
                  y = i / Size;
 
-            for (fast j = 1; j <= Size; j++)
+            shuffle(seq);
+            for (fast j : seq)
             {
                 if (!opts.possible(x, y, j))
                     continue;
@@ -167,15 +198,11 @@ public:
                 gr.data[i] = j;
                 opts.set(x, y, j);
 
-                // // PRINT
-                // std::cout << "\033[13A";
-                // print(gr);
+                step(gr);
 
-                auto rec = solve_rec(i + 1, gr, opts);
+                auto rec = solve_rec_f(i + 1, gr, opts, seq, shuffle, step);
                 if (rec.has_value())
-                {
                     return rec;
-                }
 
                 opts.reset(x, y, j);
             }
@@ -200,7 +227,9 @@ public:
                 if (copy.at(x, y) != 0)
                     opts.set(x, y, copy.at(x, y));
 
-        return solve_rec(0, copy, opts);
+        return solve_rec_f(0, copy, opts,
+                           range<fast, 1, Size + 1>{},
+                           [](const auto&){}, [](const auto&){});
     }
 
     static constexpr sud block() { return isqrt(Size); }
