@@ -9,6 +9,7 @@
 #include <vector>       // vector
 #include <iterator>     // back_inserter
 #include <utility>      // move, pair
+#include <map>
 
 #include <stdint.h>
 
@@ -85,82 +86,6 @@ class grid
 {
     std::array<sud, Size * Size> data{ 0 };
 
-    template<typename Obj, typename F1, typename F2>
-    bool check_lambda(Obj& bits, F1 cond, F2 chk) const
-    {
-        for (int_fast8_t i = 0; i < Size; i++)
-        {
-            for (int_fast8_t x = 0; x < Size; x++)
-            {
-                if (!cond(at(x, i)))
-                    return false;
-            }
-            if (!chk(bits))
-                return false;
-            bits.reset();
-
-            for (int_fast8_t y = 0; y < Size; y++)
-            {
-                if (!cond(at(i, y)))
-                    return false;
-            }
-            if (!chk(bits))
-                return false;
-            bits.reset();
-        }
-
-        for (int_fast8_t i = 0; i < block(); i++)
-        {
-            for (int_fast8_t j = 0; j < block(); j++)
-            {
-                for (int_fast8_t y = 0; y < block(); y++)
-                {
-                    for (int_fast8_t x = 0; x < block(); x++)
-                    {
-                        if (!cond(at(x + i * block(), y + j * block())))
-                            return false;
-                    }
-                }
-                if (!chk(bits))
-                    return false;
-                bits.reset();
-            }
-        }
-
-        return true;
-    }
-
-public:
-    constexpr grid(std::array<sud, Size * Size> data)
-        : data(std::move(data))
-    { }
-
-    constexpr grid() = default;
-
-    bool check() const
-    {
-        auto bits = std::bitset<Size>{ 0 };
-        auto cond = [&](auto v)
-        {
-            if (v == 0)
-                return true;
-            if (bits.test(v - 1))
-                return false;
-            bits.set(v - 1);
-            return true;
-        };
-        return check_lambda(bits, cond, [](const auto&) { return true; });
-    }
-
-    bool possible_at(sud val, sud x, sud y)
-    {
-        auto prev = at(x, y);
-        at(x, y) = val;
-        bool ok = check();
-        at(x, y) = prev;
-        return ok;
-    }
-
     constexpr bool validate() const
     {
         auto opts = bag<Size>{};
@@ -174,6 +99,53 @@ public:
             }
         }
         return true;
+    }
+
+public:
+    constexpr grid(std::array<sud, Size * Size> data)
+        : data(std::move(data))
+    { }
+
+    constexpr grid() = default;
+
+    static constexpr auto size() { return Size; }
+
+    constexpr bool check() const
+    {
+        auto opts = bag<Size>{};
+        for (fast y = 0; y < Size; y++)
+        {
+            for (fast x = 0; x < Size; x++)
+            {
+                sud val = at(x, y);
+                if (val == 0)
+                    continue;
+
+                if (!opts.possible(x, y, val))
+                    return false;
+
+                opts.set(x, y, val);
+            }
+        }
+        return true;
+    }
+
+    constexpr bool is_solved() const
+    {
+        for (fast i = 0; i < data.size(); i++)
+            if (data[i] == 0)
+                return false;
+
+        return validate();
+    }
+
+    bool possible_at(sud val, sud x, sud y)
+    {
+        auto prev = at(x, y);
+        at(x, y) = val;
+        bool ok = check();
+        at(x, y) = prev;
+        return ok;
     }
 
     auto solve_rec(index i, grid& gr, bag<Size>& opts) const

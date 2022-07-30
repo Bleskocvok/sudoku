@@ -1,0 +1,15 @@
+
+# binaries, compilation garbage
+sudoku
+test
+*.d
+*.o
+
+# benchmarking
+/callgrind.out.*
+
+# editor settings
+/.vscode/
+
+# testing folder
+/old/

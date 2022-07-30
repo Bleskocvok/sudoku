@@ -1,15 +1,24 @@
 
 CXXFLAGS = -std=c++17 -pedantic -Wall -Wextra -O2 -DNDEBUG
-# CXXFLAGS = -std=c++17 -pedantic -Wall -Wextra -g
 
 TARGET = sudoku
-
 SRC = main.cpp
-
 OBJ    = $(SRC:.cpp=.o)
-DEPEND = $(OBJ:.o=.d)
+
+CXXTEST = -std=c++17 -pedantic -Wall -Wextra -O2
+
+TEST = test
+T_SRC = test.cpp
+T_OBJ = $(T_SRC:.cpp=.o)
+
+DEPEND = $(OBJ:.o=.d) $(T_OBJ:.o=.d)
 
 all: $(TARGET)
+
+$(TEST): $(T_OBJ)
+	$(CXX) -o $@ $^
+
+$(TEST): CXXFLAGS = $(CXXTEST)
 
 $(TARGET): $(OBJ)
 	$(CXX) -o $@ $^
@@ -26,7 +35,7 @@ clean:
 	$(RM) $(OBJ) $(DEPEND)
 
 distclean: clean
-	$(RM) $(TARGET)
+	$(RM) $(TARGET) $(TEST)
 
 .PHONY: all clean distclean
 
