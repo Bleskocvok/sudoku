@@ -1,6 +1,8 @@
 #pragma once
 
-#include <iostream>     // cout, ostream
+#include <iostream>     // cout, cin
+#include <ostream>      // ostream
+#include <istream>      // istream
 #include <array>        // array
 #include <optional>     // optional, nullopt
 #include <bitset>       // bitset
@@ -11,6 +13,8 @@
 #include <utility>      // move, pair
 #include <iterator>     // forward_iterator_tag
 #include <stdexcept>    // logic_error
+#include <sstream>      // stringstream
+#include <variant>      // variant
 
 #include <stdint.h>
 
@@ -26,6 +30,11 @@ class grid;
 
 template<uint8_t Size>
 void print(const grid<Size>& g, std::ostream& out = std::cout);
+
+
+template<uint8_t Size>
+auto parse(std::istream& in = std::cin)
+    -> std::variant<grid<Size>, std::string>;
 
 
 template<typename T>
@@ -125,6 +134,10 @@ class grid
         }
         return true;
     }
+
+    template<uint8_t S>
+    friend auto parse(std::istream& in)
+        -> std::variant<grid<S>, std::string>;
 
 public:
     constexpr grid(std::array<sud, Size * Size> data)
@@ -320,4 +333,40 @@ void print(const grid<Size>& g, std::ostream& out)
         if (y % g.block() == g.block() - 1)
             line();
     }
+}
+
+
+
+template<uint8_t Size>
+auto parse(std::istream& in) -> std::variant<grid<Size>, std::string>
+{
+    auto res = grid<Size>{};
+
+    auto str = std::stringstream{};
+    print(res, str);
+    auto fmt = std::move(str).str();
+
+    static const auto nums = std::string{ "0123456789" };
+
+    int i = 0;
+    for (char f : fmt)
+    {
+        char c = in.get();
+        switch (f)
+        {
+            case '.':
+                if (auto n = nums.find(c); n != nums.npos)
+                    res.data[i++] = n;
+                else
+                    return "invalid number";
+                break;
+
+            default:
+                if (f != c)
+                    return "invalid symbol";
+                break;
+        }
+    }
+
+    return res;
 }
