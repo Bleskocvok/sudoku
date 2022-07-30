@@ -2,21 +2,13 @@
 #include "sudoku.hpp"
 
 #include <iostream>     // cout
+#include <random>       // random_device, mt19937
 
 #include <cstdio>       // printf
 #include <cassert>      // assert
 
 
 using sudoku = grid<9>;
-
-
-void solvable(const sudoku& s)
-{
-    assert(s.check());
-    auto sol = s.solution();
-    assert(sol);
-    assert(sol->is_solved());
-}
 
 
 void consistency(sudoku s)
@@ -41,30 +33,41 @@ void consistency(sudoku s)
 }
 
 
+void solvable(const sudoku& s)
+{
+    assert(s.check());
+    auto sol = s.solution();
+    assert(sol);
+    assert(sol->is_solved());
+    consistency(*sol);
+}
+
+
+void random_tests()
+{
+    static constexpr long COUNT = 100;
+
+    auto seeder = std::random_device{};
+    auto seed = seeder();
+    auto rand = std::mt19937{ seed };
+
+    for (long i = 0; i < COUNT; i++)
+    {
+        auto s = sudoku::generate(21, rand);
+        print(s);
+        solvable(s);
+    }
+}
+
+
 int main()
 {
     auto zeroes = sudoku{};
     solvable(zeroes);
 
-    // sud _ = 0;
-    // auto longdoku = grid<9>
-    // { {
-    //     _, _, _,  _, _, _,  _, _, 5,
-    //     _, _, _,  _, _, _,  _, _, _,
-    //     2, _, _,  _, _, _,  _, _, _,
+    static constexpr sud _ = 0;
 
-    //     _, _, _,  5, 2, _,  _, _, _,
-    //     _, _, _,  6, _, _,  _, _, _,
-    //     _, _, _,  _, _, 9,  _, _, _,
-
-    //     _, _, _,  _, _, _,  _, _, _,
-    //     _, _, 1,  _, _, 5,  _, _, _,
-    //     _, _, 8,  _, _, 1,  _, _, _,
-    // } };
-    // solvable(longdoku);
-
-    sud _ = 0;
-    grid<9> fastdoku(
+    auto fastdoku = sudoku(
     {
         _, _, 8,  _, _, 7,  4, _, _,
         _, 3, _,  _, 8, _,  _, 5, _,
@@ -80,7 +83,23 @@ int main()
     });
     solvable(fastdoku);
 
-    consistency(fastdoku.solution().value());
+    auto longdoku = sudoku
+    { {
+        _, _, _,  _, _, _,  _, _, 5,
+        _, _, _,  _, _, _,  _, _, _,
+        2, _, _,  _, _, _,  _, _, _,
+
+        _, _, _,  5, 2, _,  _, _, _,
+        _, _, _,  6, _, _,  _, _, _,
+        _, _, _,  _, _, 9,  _, _, _,
+
+        _, _, _,  _, _, _,  _, _, _,
+        _, _, 1,  _, _, 5,  _, _, _,
+        _, _, 8,  _, _, 1,  _, _, _,
+    } };
+    solvable(longdoku);
+
+    random_tests();
 
     std::printf("OK\n");
 

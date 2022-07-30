@@ -10,6 +10,7 @@
 #include <iterator>     // back_inserter
 #include <utility>      // move, pair
 #include <iterator>     // forward_iterator_tag
+#include <stdexcept>    // logic_error
 
 #include <stdint.h>
 
@@ -173,12 +174,8 @@ public:
     }
 
     template<typename Seq, typename Shuffle, typename Step>
-    auto solve_rec_f(index i,
-                     grid& gr,
-                     bag<Size>& opts,
-                     Seq seq,
-                     Shuffle shuffle,
-                     Step step) const
+    auto solve_rec_f(index i, grid& gr, bag<Size>& opts,
+                     Seq seq, Shuffle shuffle, Step step) const
         -> std::optional<grid>
     {
         for (; i < gr.data.size(); i++)
@@ -217,7 +214,9 @@ public:
         return std::nullopt;
     }
 
-    std::optional<grid> solution() const
+    template<typename Seq, typename Shuffle, typename Step>
+    auto solution(Seq seq, Shuffle shuffle, Step step) const
+        -> std::optional<grid> 
     {
         auto copy = *this;
         auto opts = bag<Size>{};
@@ -227,9 +226,55 @@ public:
                 if (copy.at(x, y) != 0)
                     opts.set(x, y, copy.at(x, y));
 
-        return solve_rec_f(0, copy, opts,
-                           range<fast, 1, Size + 1>{},
-                           [](const auto&){}, [](const auto&){});
+        return solve_rec_f(0, copy, opts, seq, shuffle, step);
+    }
+
+    auto solution() const -> std::optional<grid> 
+    {
+        return solution(range<fast, 1, Size + 1>{}, [](const auto&){},
+                                                    [](const auto&){});
+    }
+
+    template<typename Rand>
+    static grid generate(int unfilled, Rand& rand)
+    {
+        grid empty{};
+
+        auto vals = std::vector<sud>{};
+        std::generate_n(std::back_inserter(vals), Size,
+                    [n = 1]() mutable { return n++; });
+
+        auto shuffle = [&rand](auto& vals)
+        {
+            std::shuffle(vals.begin(), vals.end(), rand);
+        };
+
+        auto res = empty.solution(vals, shuffle, [](const auto&){});
+
+        if (!res)
+            throw std::logic_error("empty sudoku did not yield a solution");
+
+        auto mk_indices = []()
+        {
+            auto res = std::vector<std::pair<sud, sud>>{};
+            res.reserve(Size * Size);
+
+            for (int x = 0; x < Size; x++)
+                for (int y = 0; y < Size; y++)
+                    res.emplace_back(x, y);
+            return res;
+        };
+
+        static auto indices = mk_indices();
+        shuffle(indices);
+
+        for (int i = 0; i < std::min<int>(unfilled, indices.size()); i++)
+        {
+            auto [x, y] = indices[i];
+            res->at(x, y) = 0;
+        }
+
+        return *res;
     }
 
     static constexpr sud block() { return isqrt(Size); }
@@ -277,44 +322,3 @@ void print(const grid<Size>& g, std::ostream& out)
             line();
     }
 }
-
-
-template<uint8_t Size, typename Rand>
-grid<Size> generate(int filled, Rand& rand)
-{
-    auto vals = std::vector<sud>{};
-    std::generate_n(std::back_inserter(vals), Size,
-                    [n = 1]() mutable { return n++; });
-
-    auto indices = std::vector<std::pair<sud, sud>>{};
-    indices.reserve(Size * Size);
-
-    for (int x = 0; x < Size; x++)
-        for (int y = 0; y < Size; y++)
-            indices.emplace_back(x, y);
-
-    std::shuffle(indices.begin(), indices.end(), rand);
-
-    auto opts = bag<Size>{};
-    auto res = grid<Size>{};
-
-    for (int i = 0; i < std::min<int>(filled, indices.size()); i++)
-    {
-        auto [x, y] = indices[i];
-
-        std::shuffle(vals.begin(), vals.end(), rand);
-
-        for (auto v : vals)
-        {
-            if (opts.possible(x, y, v))
-            {
-                res.at(x, y) = v;
-                opts.set(x, y, v);
-                break;
-            }
-        }
-    }
-    return res;
-}
-
-
