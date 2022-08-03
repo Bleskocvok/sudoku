@@ -164,6 +164,9 @@ public:
                 if (val == 0)
                     continue;
 
+                if (val < 0 || val > Size)
+                    return false;
+
                 if (!opts.possible(x, y, val))
                     return false;
 
