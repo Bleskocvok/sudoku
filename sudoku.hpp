@@ -33,6 +33,15 @@ void print(const grid<Size>& g, std::ostream& out = std::cout);
 
 
 template<uint8_t Size>
+void print_packed(const grid<Size>& g, std::ostream& out = std::cout);
+
+
+template<uint8_t Size>
+auto parse_packed(std::istream& in = std::cin)
+    -> std::variant<grid<Size>, std::string>;
+
+
+template<uint8_t Size>
 auto parse(std::istream& in = std::cin)
     -> std::variant<grid<Size>, std::string>;
 
@@ -139,6 +148,10 @@ class grid
     friend auto parse(std::istream& in)
         -> std::variant<grid<S>, std::string>;
 
+    template<uint8_t S>
+    friend auto parse_packed(std::istream& in)
+        -> std::variant<grid<S>, std::string>;
+
 public:
     constexpr grid(std::array<sud, Size * Size> data)
         : data(std::move(data))
@@ -164,7 +177,7 @@ public:
                 if (val == 0)
                     continue;
 
-                if (val < 0 || val > Size)
+                if (val > Size)
                     return false;
 
                 if (!opts.possible(x, y, val))
@@ -339,6 +352,38 @@ void print(const grid<Size>& g, std::ostream& out)
 }
 
 
+// TODO: solve issue for grid<Size>, where Size > 9
+static const auto PACKED_SYMBOLS = std::string{ ".123456789" };
+
+
+template<uint8_t Size>
+void print_packed(const grid<Size>& g, std::ostream& out)
+{
+    for (fast y = 0; y < Size; y++)
+        for (fast x = 0; x < Size; x++)
+            out << PACKED_SYMBOLS.at(unsigned(g.at(x, y)));
+}
+
+
+template<uint8_t Size>
+auto parse_packed(std::istream& in)
+    -> std::variant<grid<Size>, std::string>
+{
+    auto res = grid<Size>{};
+
+    for (int i = 0; i < Size * Size; i++)
+    {
+        if (!in)
+            return "unexpected eof";
+        char c = in.get();
+        if (auto n = PACKED_SYMBOLS.find(c); n != PACKED_SYMBOLS.npos)
+            res.data[i] = n;
+        else
+            return (std::string("invalid symbol '") += c) += "'";
+    }
+    return res;
+}
+
 
 template<uint8_t Size>
 auto parse(std::istream& in) -> std::variant<grid<Size>, std::string>
@@ -354,6 +399,8 @@ auto parse(std::istream& in) -> std::variant<grid<Size>, std::string>
     int i = 0;
     for (char f : fmt)
     {
+        if (!in)
+            return "unexpected eof";
         char c = in.get();
         switch (f)
         {
