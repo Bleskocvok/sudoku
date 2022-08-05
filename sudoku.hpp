@@ -7,7 +7,7 @@
 #include <optional>     // optional, nullopt
 #include <bitset>       // bitset
 #include <string>       // string
-#include <algorithm>    // generate_n, shuffle, min
+#include <algorithm>    // generate_n, shuffle, min, sort
 #include <vector>       // vector
 #include <iterator>     // back_inserter
 #include <utility>      // move, pair
@@ -16,7 +16,6 @@
 #include <sstream>      // stringstream
 #include <variant>      // variant
 #include <tuple>        // tuple, make_tuple
-#include <algorithm>    // sort
 
 #include <stdint.h>
 
@@ -114,8 +113,8 @@ public:
     constexpr bool possible(sud x, sud y, sud blk, sud val) const
     {
         return !rows[y][val - 1]
-            && !cols[x][val - 1]
-            && !blocks[blk][val - 1];
+             & !cols[x][val - 1]
+             & !blocks[blk][val - 1];
     }
 
     constexpr size_t count(sud x, sud y, sud blk) const
