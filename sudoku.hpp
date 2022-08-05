@@ -7,7 +7,7 @@
 #include <optional>     // optional, nullopt
 #include <bitset>       // bitset
 #include <string>       // string
-#include <algorithm>    // generate_n, shuffle, min, sort
+#include <algorithm>    // generate_n, shuffle, sort, min, min_element, swap
 #include <vector>       // vector
 #include <iterator>     // back_inserter
 #include <utility>      // move, pair
@@ -263,7 +263,7 @@ public:
 
     template<typename Seq, typename Shuffle, typename Step>
     auto solve_rec_f(size_t i, grid& gr, bag<Size>& opts,
-                     const std::vector<std::tuple<fast, fast, fast>>& zeroes,
+                     std::vector<std::tuple<fast, fast, fast>>& zeroes,
                      Seq& seq, Shuffle shuffle, Step step) const
         -> std::optional<grid>
     {
@@ -273,9 +273,21 @@ public:
                                  : std::nullopt;
         }
 
-        shuffle(seq);
+        // move the cell with least options at the beginning
+        auto min_el = std::min_element(zeroes.begin() + i, zeroes.end(), 
+            [&](const auto& a, const auto& b)
+            {
+                auto [ax, ay, ablk] = a;
+                auto [bx, by, bblk] = b;
+                return opts.count(ax, ay, ablk) < opts.count(bx, by, bblk);
+            });
+        using std::swap;
+        swap(zeroes[i], *min_el);
 
         auto [x, y, blk] = zeroes[i];
+
+        shuffle(seq);
+
         for (sud j : seq)
         {
             uint16_t bit = 1 << j;
