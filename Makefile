@@ -1,11 +1,11 @@
 
-CXXFLAGS = -std=c++17 -pedantic -Wall -Wextra -O2 -DNDEBUG
+CXXFLAGS = -std=c++17 -Wall -Wextra -O2 -DNDEBUG -march=native
 
 TARGET = sudoku
 SRC = main.cpp
 OBJ    = $(SRC:.cpp=.o)
 
-CXXTEST = -std=c++17 -pedantic -Wall -Wextra -O2
+CXXTEST = -std=c++17 -Wall -Wextra -O2
 
 TEST = test
 T_SRC = test.cpp
