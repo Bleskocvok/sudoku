@@ -10,6 +10,8 @@
 
 using sudoku = grid<9>;
 
+static constexpr sud _ = 0;
+
 
 void consistency(sudoku s)
 {
@@ -33,19 +35,32 @@ void consistency(sudoku s)
 }
 
 
+void check_solution_origin(const sudoku& orig, const sudoku& sol)
+{
+    for (fast y = 0; y < orig.size(); y++)
+        for (fast x = 0; x < orig.size(); x++)
+            assert(orig.at(x, y) == 0 || orig.at(x, y) == sol.at(x, y));
+}
+
+
 void solvable(const sudoku& s)
 {
     assert(s.check());
+
     auto sol = s.solution();
+
     assert(sol);
     assert(sol->is_solved());
+
+    check_solution_origin(s, *sol);
+
     consistency(*sol);
 }
 
 
 void random_tests()
 {
-    static constexpr long COUNT = 100;
+    static constexpr long COUNT = 10000;
 
     auto seeder = std::random_device{};
     auto seed = seeder();
@@ -64,7 +79,7 @@ int main()
     auto zeroes = sudoku{};
     solvable(zeroes);
 
-    static constexpr sud _ = 0;
+    std::printf("empty\n");
 
     auto fastdoku = sudoku(
     {
@@ -82,6 +97,8 @@ int main()
     });
     solvable(fastdoku);
 
+    std::printf("fastdoku\n");
+
     auto longdoku = sudoku
     { {
         _, _, _,  _, _, _,  _, _, 5,
@@ -98,7 +115,11 @@ int main()
     } };
     solvable(longdoku);
 
+    std::printf("longdoku\n");
+
     random_tests();
+
+    std::printf("random_tests\n");
 
     std::printf("OK\n");
 
