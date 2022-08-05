@@ -278,10 +278,12 @@ public:
         auto [x, y, blk] = zeroes[i];
         for (sud j : seq)
         {
-            if (!opts.possible(x, y, blk, j))
+            uint16_t bit = 1 << j;
+
+            if (!opts.bit_possible(x, y, blk, bit))
                 continue;
 
-            opts.set(x, y, blk, j);
+            opts.bit_set(x, y, blk, bit);
             gr.at(x, y) = j;
 
             step(gr);
@@ -290,7 +292,7 @@ public:
             if (res)
                 return res;
 
-            opts.reset(x, y, blk, j);
+            opts.bit_reset(x, y, blk, bit);
         }
         gr.at(x, y) = 0;
 
@@ -328,13 +330,6 @@ public:
                      < std::make_tuple(bcount, -by, -bx);
             });
 
-        // for (size_t i = 0; i < zeroes.size(); i++)
-        // {
-        //     auto [x, y, blk] = zeroes[i];
-        //     std::printf("x: %d, y: %d, blk: %d, count: %zd\n",
-        //                 int(x), int(y), int(blk), opts.count(x, y, blk));
-        // }
-
         return solve_rec_f(0, copy, opts, zeroes, seq, shuffle, step);
     }
 
@@ -351,7 +346,7 @@ public:
 
         auto vals = std::vector<sud>{};
         std::generate_n(std::back_inserter(vals), Size,
-                    [n = 1]() mutable { return n++; });
+                    [n = 0]() mutable { return ++n; });
 
         auto shuffle = [&rand](auto& vals)
         {
