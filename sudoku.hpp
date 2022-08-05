@@ -83,47 +83,6 @@ struct range
 };
 
 
-// template <uint8_t Size>
-// class bag
-// {
-//     std::array<std::bitset<Size>, Size> rows{};
-//     std::array<std::bitset<Size>, Size> cols{};
-//     std::array<std::bitset<Size>, Size> blocks{};
-
-//     constexpr auto block() const { return grid<Size>::block(); }
-
-//     constexpr void _set(sud x, sud y, sud blk, sud val, bool b)
-//     {
-//         rows[y][val - 1] = b;
-//         cols[x][val - 1] = b;
-//         blocks[blk][val - 1] = b;
-//     }
-
-// public:
-//     constexpr void set(sud x, sud y, sud blk, sud val)
-//     {
-//         _set(x, y, blk, val, true);
-//     }
-
-//     constexpr void reset(sud x, sud y, sud blk, sud val)
-//     {
-//         _set(x, y, blk, val, false);
-//     }
-
-//     constexpr bool possible(sud x, sud y, sud blk, sud val) const
-//     {
-//         return !rows[y][val - 1]
-//              & !cols[x][val - 1]
-//              & !blocks[blk][val - 1];
-//     }
-
-//     constexpr size_t count(sud x, sud y, sud blk) const
-//     {
-//         return (~rows[y] & ~cols[x] & ~blocks[blk]).count();
-//     }
-// };
-
-
 template <uint8_t Size>
 class bag
 {
