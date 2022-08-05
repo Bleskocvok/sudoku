@@ -58,17 +58,20 @@ void solvable(const sudoku& s)
 }
 
 
-void random_tests()
+template<typename Rand>
+void random_tests(unsigned unfilled, long count, Rand& rand)
 {
-    static constexpr long COUNT = 10000;
+    std::printf("random_tests: clues=%u count=%ld\n",
+        sudoku::size() * sudoku::size() - unfilled, count);
 
-    auto seeder = std::random_device{};
-    auto seed = seeder();
-    auto rand = std::mt19937{ seed };
+    std::printf("\n");  // placeholder
+    print(sudoku{});    // placeholder
 
-    for (long i = 0; i < COUNT; i++)
+    for (long i = 0; i < count; i++)
     {
-        auto s = sudoku::generate(21, rand);
+        auto s = sudoku::generate(unfilled, rand);
+        std::printf("\033[14A""i=%10ld\n", i + 1);  // overwrite
+        print(s);
         solvable(s);
     }
 }
@@ -76,11 +79,11 @@ void random_tests()
 
 int main()
 {
+    std::printf("empty\n");
     auto zeroes = sudoku{};
     solvable(zeroes);
 
-    std::printf("empty\n");
-
+    std::printf("fastdoku\n");
     auto fastdoku = sudoku(
     {
         _, _, 8,  _, _, 7,  4, _, _,
@@ -97,8 +100,7 @@ int main()
     });
     solvable(fastdoku);
 
-    std::printf("fastdoku\n");
-
+    std::printf("longdoku\n");
     auto longdoku = sudoku
     { {
         _, _, _,  _, _, _,  _, _, 5,
@@ -115,11 +117,17 @@ int main()
     } };
     solvable(longdoku);
 
-    std::printf("longdoku\n");
+    auto seeder = std::random_device{};
+    // auto seed = seeder();
+    auto seed = 0u;
+    auto rand = std::mt19937{ seed };
 
-    random_tests();
+    std::printf("seed=%u\n", seed);
 
-    std::printf("random_tests\n");
+    random_tests(21,    10000, rand);
+    random_tests(5,     10000, rand);
+    random_tests(81-17,   100, rand);
+    random_tests(81-5,     10, rand);
 
     std::printf("OK\n");
 
