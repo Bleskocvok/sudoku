@@ -83,43 +83,92 @@ struct range
 };
 
 
+// template <uint8_t Size>
+// class bag
+// {
+//     std::array<std::bitset<Size>, Size> rows{};
+//     std::array<std::bitset<Size>, Size> cols{};
+//     std::array<std::bitset<Size>, Size> blocks{};
+
+//     constexpr auto block() const { return grid<Size>::block(); }
+
+//     constexpr void _set(sud x, sud y, sud blk, sud val, bool b)
+//     {
+//         rows[y][val - 1] = b;
+//         cols[x][val - 1] = b;
+//         blocks[blk][val - 1] = b;
+//     }
+
+// public:
+//     constexpr void set(sud x, sud y, sud blk, sud val)
+//     {
+//         _set(x, y, blk, val, true);
+//     }
+
+//     constexpr void reset(sud x, sud y, sud blk, sud val)
+//     {
+//         _set(x, y, blk, val, false);
+//     }
+
+//     constexpr bool possible(sud x, sud y, sud blk, sud val) const
+//     {
+//         return !rows[y][val - 1]
+//              & !cols[x][val - 1]
+//              & !blocks[blk][val - 1];
+//     }
+
+//     constexpr size_t count(sud x, sud y, sud blk) const
+//     {
+//         return (~rows[y] & ~cols[x] & ~blocks[blk]).count();
+//     }
+// };
+
+
 template <uint8_t Size>
 class bag
 {
-    std::array<std::bitset<Size>, Size> rows{};
-    std::array<std::bitset<Size>, Size> cols{};
-    std::array<std::bitset<Size>, Size> blocks{};
-
-    constexpr auto block() const { return grid<Size>::block(); }
-
-    constexpr void _set(sud x, sud y, sud blk, sud val, bool b)
-    {
-        rows[y][val - 1] = b;
-        cols[x][val - 1] = b;
-        blocks[blk][val - 1] = b;
-    }
+    std::array<uint16_t, Size> rows{ 0 };
+    std::array<uint16_t, Size> cols{ 0 };
+    std::array<uint16_t, Size> blks{ 0 };
 
 public:
     constexpr void set(sud x, sud y, sud blk, sud val)
     {
-        _set(x, y, blk, val, true);
+        bit_set(x, y, blk, 0x1 << val);
     }
 
     constexpr void reset(sud x, sud y, sud blk, sud val)
     {
-        _set(x, y, blk, val, false);
+        bit_reset(x, y, blk, 0x1 << val);
     }
 
     constexpr bool possible(sud x, sud y, sud blk, sud val) const
     {
-        return !rows[y][val - 1]
-             & !cols[x][val - 1]
-             & !blocks[blk][val - 1];
+        return bit_possible(x, y, blk, 0x1 << val);
+    }
+
+    constexpr void bit_set(sud x, sud y, sud blk, uint16_t bit)
+    {
+        rows[y]   |= bit;
+        cols[x]   |= bit;
+        blks[blk] |= bit;
+    }
+
+    constexpr void bit_reset(sud x, sud y, sud blk, uint16_t bit)
+    {
+        rows[y]   ^= bit;
+        cols[x]   ^= bit;
+        blks[blk] ^= bit;
+    }
+
+    constexpr bool bit_possible(sud x, sud y, sud blk, uint16_t bit) const
+    {
+        return ~(rows[y] | cols[x] | blks[blk]) & bit;
     }
 
     constexpr size_t count(sud x, sud y, sud blk) const
     {
-        return (~rows[y] & ~cols[x] & ~blocks[blk]).count();
+        return std::bitset<16>(~rows[y] & ~cols[x] & ~blks[blk]).count();
     }
 };
 
