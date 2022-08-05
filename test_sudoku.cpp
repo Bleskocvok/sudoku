@@ -126,8 +126,8 @@ int main()
 
     random_tests(21,    10000, rand);
     random_tests(5,     10000, rand);
-    random_tests(81-17,   100, rand);
-    random_tests(81-5,     10, rand);
+    random_tests(81-17,  1000, rand);
+    random_tests(81-5,    100, rand);
 
     std::printf("OK\n");
 
