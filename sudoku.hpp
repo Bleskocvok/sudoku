@@ -15,6 +15,8 @@
 #include <stdexcept>    // logic_error
 #include <sstream>      // stringstream
 #include <variant>      // variant
+#include <tuple>        // tuple, make_tuple
+#include <algorithm>    // sort
 
 #include <stdint.h>
 
@@ -91,35 +93,34 @@ class bag
 
     constexpr auto block() const { return grid<Size>::block(); }
 
-    constexpr auto blk_idx(sud x, sud y) const
-    {
-        return (y / 3) * block() + (x / 3);
-    }
-
-    constexpr void _set(sud x, sud y, sud val, bool b)
+    constexpr void _set(sud x, sud y, sud blk, sud val, bool b)
     {
         rows[y][val - 1] = b;
         cols[x][val - 1] = b;
-        blocks[blk_idx(x, y)][val - 1] = b;
+        blocks[blk][val - 1] = b;
     }
 
 public:
-    constexpr void set(sud x, sud y, sud val)
+    constexpr void set(sud x, sud y, sud blk, sud val)
     {
-        _set(x, y, val, true);
+        _set(x, y, blk, val, true);
     }
 
-    constexpr void reset(sud x, sud y, sud val)
+    constexpr void reset(sud x, sud y, sud blk, sud val)
     {
-        _set(x, y, val, false);
+        _set(x, y, blk, val, false);
     }
 
-    constexpr bool possible(sud x, sud y, sud val) const
+    constexpr bool possible(sud x, sud y, sud blk, sud val) const
     {
-        val -= 1;
-        return !rows[y][val]
-            && !cols[x][val]
-            && !blocks[blk_idx(x, y)][val];
+        return !rows[y][val - 1]
+            && !cols[x][val - 1]
+            && !blocks[blk][val - 1];
+    }
+
+    constexpr size_t count(sud x, sud y, sud blk) const
+    {
+        return (~rows[y] & ~cols[x] & ~blocks[blk]).count();
     }
 };
 
@@ -129,6 +130,11 @@ class grid
 {
     std::array<sud, Size * Size> data{ 0 };
 
+    constexpr auto blk_idx(sud x, sud y) const
+    {
+        return (y / block()) * block() + (x / block());
+    }
+
     constexpr bool validate() const
     {
         auto opts = bag<Size>{};
@@ -136,9 +142,9 @@ class grid
         {
             for (fast x = 0; x < Size; x++)
             {
-                if (!opts.possible(x, y, at(x, y)))
+                if (!opts.possible(x, y, blk_idx(x, y), at(x, y)))
                     return false;
-                opts.set(x, y, at(x, y));
+                opts.set(x, y, blk_idx(x, y), at(x, y));
             }
         }
         return true;
@@ -180,10 +186,10 @@ public:
                 if (val > Size)
                     return false;
 
-                if (!opts.possible(x, y, val))
+                if (!opts.possible(x, y, blk_idx(x, y), val))
                     return false;
 
-                opts.set(x, y, val);
+                opts.set(x, y, blk_idx(x, y), val);
             }
         }
         return true;
@@ -208,65 +214,82 @@ public:
     }
 
     template<typename Seq, typename Shuffle, typename Step>
-    auto solve_rec_f(index i, grid& gr, bag<Size>& opts,
-                     Seq seq, Shuffle shuffle, Step step) const
+    auto solve_rec_f(size_t i, grid& gr, bag<Size>& opts,
+                     const std::vector<std::tuple<fast, fast, fast>>& zeroes,
+                     Seq& seq, Shuffle shuffle, Step step) const
         -> std::optional<grid>
     {
-        for (; i < gr.data.size(); i++)
+        if (i >= zeroes.size())
         {
-            if (gr.data[i] != 0)
-                continue;
-
-            fast x = i % Size,
-                 y = i / Size;
-
-            shuffle(seq);
-            for (fast j : seq)
-            {
-                if (!opts.possible(x, y, j))
-                    continue;
-
-                gr.data[i] = j;
-                opts.set(x, y, j);
-
-                step(gr);
-
-                auto rec = solve_rec_f(i + 1, gr, opts, seq, shuffle, step);
-                if (rec.has_value())
-                    return rec;
-
-                opts.reset(x, y, j);
-            }
-
-            gr.data[i] = 0;
-            return std::nullopt;
+            return gr.validate() ? std::optional<grid>{ gr }
+                                 : std::nullopt;
         }
 
-        if (gr.validate())
-            return { gr };
+        auto [x, y, blk] = zeroes[i];
+        for (sud j : seq)
+        {
+            if (!opts.possible(x, y, blk, j))
+                continue;
+
+            opts.set(x, y, blk, j);
+            gr.at(x, y) = j;
+
+            auto res = solve_rec_f(i + 1, gr, opts, zeroes, seq, shuffle, step);
+            if (res)
+                return res;
+
+            opts.reset(x, y, blk, j);
+        }
+        gr.at(x, y) = 0;
 
         return std::nullopt;
     }
 
     template<typename Seq, typename Shuffle, typename Step>
-    auto solution(Seq seq, Shuffle shuffle, Step step) const
+    auto solution(Seq& seq, Shuffle shuffle, Step step) const
         -> std::optional<grid> 
     {
         auto copy = *this;
         auto opts = bag<Size>{};
+        auto zeroes = std::vector<std::tuple<fast, fast, fast>>{};
+        zeroes.reserve(Size * Size);    // upper bound for size
 
         for (int y = 0; y < Size; y++)
+        {
             for (int x = 0; x < Size; x++)
+            {
                 if (copy.at(x, y) != 0)
-                    opts.set(x, y, copy.at(x, y));
+                    opts.set(x, y, blk_idx(x, y), copy.at(x, y));
+                else
+                    zeroes.emplace_back(x, y, blk_idx(x, y));
+            }
+        }
 
-        return solve_rec_f(0, copy, opts, seq, shuffle, step);
+        std::sort(zeroes.begin(), zeroes.end(),
+            [&](const auto& a, const auto& b)
+            {
+                auto [ax, ay, ablk] = a;
+                auto [bx, by, bblk] = b;
+                auto acount = opts.count(ax, ay, ablk);
+                auto bcount = opts.count(bx, by, bblk);
+                return std::make_tuple(acount, ay, ax)
+                     < std::make_tuple(bcount, by, bx);
+            });
+
+        // for (size_t i = 0; i < zeroes.size(); i++)
+        // {
+        //     auto [x, y, blk] = zeroes[i];
+        //     std::printf("x: %d, y: %d, blk: %d, count: %zd\n",
+        //                 int(x), int(y), int(blk), opts.count(x, y, blk));
+        // }
+
+        return solve_rec_f(0, copy, opts, zeroes, seq, shuffle, step);
     }
 
     auto solution() const -> std::optional<grid> 
     {
-        return solution(range<fast, 1, Size + 1>{}, [](const auto&){},
-                                                    [](const auto&){});
+        auto nums = range<fast, 1, Size + 1>{};
+        return solution(nums, [](const auto&){}, [](const auto&){});
     }
 
     template<typename Rand>

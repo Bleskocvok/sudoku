@@ -1,5 +1,5 @@
 
-CXXFLAGS = -std=c++17 -Wall -Wextra -O2 -DNDEBUG -march=native
+CXXFLAGS = -std=c++17 -Wall -Wextra -O2 -march=native -DNDEBUG
 
 TARGET = sudoku
 SRC = main.cpp
@@ -13,7 +13,7 @@ T_OBJ = $(T_SRC:.cpp=.o)
 
 DEPEND = $(OBJ:.o=.d) $(T_OBJ:.o=.d)
 
-all: $(TARGET)
+all: $(TARGET) $(TEST)
 
 $(TEST): $(T_OBJ)
 	$(CXX) -o $@ $^
