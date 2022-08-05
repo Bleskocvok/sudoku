@@ -2,20 +2,21 @@
 #include "sudoku.hpp"
 
 #include <iostream>     // cout
+#include <fstream>      // ifstream
 // #include <random>       // random_device, mt19937
 #include <string>       // string, getline
 #include <sstream>      // string_stream
 #include <utility>      // move
 
 
-int main()
+int solve(std::istream& input)
 {
     auto line = std::string{};
     auto stream = std::stringstream{};
 
-    while (std::cin)
+    while (input)
     {
-        std::getline(std::cin, line);
+        std::getline(input, line);
         stream.str(std::move(line));
 
         if (line.empty())
@@ -53,4 +54,16 @@ int main()
     }
 
     return 0;
+}
+
+
+int main(int argc, char** argv)
+{
+    if (argc >= 2)
+    {
+        auto file_in = std::ifstream(argv[1]);
+        return solve(file_in);
+    }
+
+    return solve(std::cin);
 }
