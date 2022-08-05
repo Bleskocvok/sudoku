@@ -225,6 +225,8 @@ public:
                                  : std::nullopt;
         }
 
+        shuffle(seq);
+
         auto [x, y, blk] = zeroes[i];
         for (sud j : seq)
         {
@@ -233,6 +235,8 @@ public:
 
             opts.set(x, y, blk, j);
             gr.at(x, y) = j;
+
+            step(gr);
 
             auto res = solve_rec_f(i + 1, gr, opts, zeroes, seq, shuffle, step);
             if (res)
@@ -272,8 +276,8 @@ public:
                 auto [bx, by, bblk] = b;
                 auto acount = opts.count(ax, ay, ablk);
                 auto bcount = opts.count(bx, by, bblk);
-                return std::make_tuple(acount, ay, ax)
-                     < std::make_tuple(bcount, by, bx);
+                return std::make_tuple(acount, -ay, -ax)
+                     < std::make_tuple(bcount, -by, -bx);
             });
 
         // for (size_t i = 0; i < zeroes.size(); i++)
