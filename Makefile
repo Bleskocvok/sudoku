@@ -5,10 +5,10 @@ TARGET = sudoku
 SRC = main.cpp
 OBJ    = $(SRC:.cpp=.o)
 
-CXXTEST = -std=c++17 -Wall -Wextra -O2
+CXXTEST = -std=c++17 -Wall -Wextra -O2 -march=native
 
-TEST = test
-T_SRC = test.cpp
+TEST = test_sudoku
+T_SRC = test_sudoku.cpp
 T_OBJ = $(T_SRC:.cpp=.o)
 
 DEPEND = $(OBJ:.o=.d) $(T_OBJ:.o=.d)

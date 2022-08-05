@@ -1,7 +1,7 @@
 
 # binaries, compilation garbage
 sudoku
-test
+test_sudoku
 *.d
 *.o
 
