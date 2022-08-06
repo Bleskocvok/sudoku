@@ -62,6 +62,8 @@ int main(int argc, char** argv)
     if (argc >= 2)
     {
         auto file_in = std::ifstream(argv[1]);
+        if (!file_in)
+            return std::cout << "ERROR: file cannot be opened\n", 1;
         return solve(file_in);
     }
 
