@@ -264,10 +264,7 @@ public:
         -> std::optional<grid>
     {
         if (i >= zeroes.size())
-        {
-            return gr.validate() ? std::optional<grid>{ gr }
-                                 : std::nullopt;
-        }
+            return { gr };
 
         // move the cell with least options at the beginning
         auto min_el = std::min_element(zeroes.begin() + i, zeroes.end(), 
@@ -326,6 +323,10 @@ public:
                     zeroes.emplace_back(x, y, blk_idx(x, y));
             }
         }
+
+        if (zeroes.empty())
+            return copy.validate() ? std::optional<grid>{ copy }
+                                   : std::nullopt;
 
         std::sort(zeroes.begin(), zeroes.end(),
             [&](const auto& a, const auto& b)
