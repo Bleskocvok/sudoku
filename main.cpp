@@ -30,7 +30,7 @@ int solve(std::istream& input)
         if (res.index() == 1)
         {
             std::cerr << "ERROR: " << std::get<std::string>(res) << "\n";
-            return 1;
+            continue;
         }
 
         grid<9>& sudoku = std::get<grid<9>>(res);
@@ -38,7 +38,7 @@ int solve(std::istream& input)
         if (!sudoku.check())
         {
             std::cerr << "ERROR: " << "sudoku is invalid" << "\n";
-            return 1;
+            continue;
         }
 
         auto sol = sudoku.solution();
@@ -46,7 +46,7 @@ int solve(std::istream& input)
         if (!sol)
         {
             std::cerr << "ERROR: " << "sudoku cannot be solved" << "\n";
-            return 1;
+            continue;
         }
 
         print_packed(*sol);
