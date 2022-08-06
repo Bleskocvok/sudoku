@@ -125,9 +125,44 @@ public:
         return ~(rows[y] | cols[x] | blks[blk]) & bit;
     }
 
-    constexpr size_t count(sud x, sud y, sud blk) const
+    size_t count(sud x, sud y, sud blk) const
     {
-        return std::bitset<16>(~rows[y] & ~cols[x] & ~blks[blk]).count();
+        static constexpr auto BITS_COUNT = []()
+        {
+            auto res = std::array<size_t, 256>{ 0 };
+            for (size_t n = 0; n < 256; n++)
+                for (size_t i = 0; i < 8; i++)
+                    res[n] += bool(n & (1 << i));
+            return res;
+        }();
+
+        uint16_t poss = ~(rows[y] | cols[x] | blks[blk]);
+        size_t res = 0;
+        res += BITS_COUNT[  poss & 0x00ff       ];  // byte one
+        res += BITS_COUNT[ (poss & 0xff00) >> 8 ];  // byte two
+        return res;
+
+        // res += __builtin_popcountl(poss & 0xff);
+        // res += __builtin_popcountl((poss & 0x1f00) >> 8);
+
+        // res = __builtin_popcountll(poss);
+
+
+        // size_t res = 0;
+        // uint16_t poss = ~(rows[y] | cols[x] | blks[blk]);
+        // res += 0 != (poss &   1);
+        // res += 0 != (poss &   2);
+        // res += 0 != (poss &   4);
+        // res += 0 != (poss &   8);
+        // res += 0 != (poss &  16);
+        // res += 0 != (poss &  32);
+        // res += 0 != (poss &  64);
+        // res += 0 != (poss & 128);
+        // res += 0 != (poss &   1 << 8);
+        // res += 0 != (poss &   2 << 8);
+        // return res;
+
+        // return std::bitset<16>(~(rows[y] | cols[x] | blks[blk])).count();
     }
 };
 
@@ -135,6 +170,8 @@ public:
 template <uint8_t Size>
 class grid
 {
+    static_assert(Size <= 16, "Size must be <= 16.");
+
     std::array<sud, Size * Size> data{ 0 };
 
     constexpr auto blk_idx(sud x, sud y) const
@@ -297,8 +334,8 @@ public:
                 auto [bx, by, bblk] = b;
                 auto acount = opts.count(ax, ay, ablk);
                 auto bcount = opts.count(bx, by, bblk);
-                return std::make_tuple(acount, -ay, -ax)
-                     < std::make_tuple(bcount, -by, -bx);
+                return std::make_tuple(acount, ay, ax)
+                     < std::make_tuple(bcount, by, bx);
             });
 
         return solve_rec_f(0, copy, opts, zeroes, seq, shuffle, step);
