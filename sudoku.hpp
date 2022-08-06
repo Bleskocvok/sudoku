@@ -20,9 +20,8 @@
 #include <stdint.h>
 
 
-using fast = uint_fast8_t;
-using index = fast; // uint_fast16_t;
-using sud  = uint_fast8_t;
+using fast = uint_fast8_t;  // for iterating over the sudoku grid
+using sud  = uint_fast8_t;  // represents a sudoku digit
 
 
 template <uint8_t Size>
@@ -57,7 +56,7 @@ constexpr inline T isqrt(T val)
 }
 
 
-template<typename T, fast Begin, fast End>
+template<typename T, ssize_t Begin, ssize_t End>
 struct range
 {
     struct iterator
@@ -127,7 +126,7 @@ public:
 
     size_t count(sud x, sud y, sud blk) const
     {
-        static constexpr auto BITS_COUNT = []()
+        constexpr static auto BITS_COUNT = []()
         {
             auto res = std::array<size_t, 256>{ 0 };
             for (size_t n = 0; n < 256; n++)
@@ -136,7 +135,10 @@ public:
             return res;
         }();
 
+        // bitset of all allowed values (included are some additional ones
+        // we don't care about)
         uint16_t poss = ~(rows[y] | cols[x] | blks[blk]);
+
         size_t res = 0;
         res += BITS_COUNT[  poss & 0x00ff       ];  // byte one
         res += BITS_COUNT[ (poss & 0xff00) >> 8 ];  // byte two
@@ -431,8 +433,8 @@ void print(const grid<Size>& g, std::ostream& out)
 }
 
 
-// TODO: solve issue for grid<Size>, where Size > 9
-static const auto PACKED_SYMBOLS = std::string{ ".123456789" };
+// allows numbers for sudoku up to 16x16
+static const auto PACKED_SYMBOLS = std::string{ ".123456789ABCDEF" };
 
 
 template<uint8_t Size>
@@ -448,6 +450,8 @@ template<uint8_t Size>
 auto parse_packed(std::istream& in)
     -> std::variant<grid<Size>, std::string>
 {
+    using namespace std::literals;
+
     auto res = grid<Size>{};
 
     for (int i = 0; i < Size * Size; i++)
@@ -458,7 +462,7 @@ auto parse_packed(std::istream& in)
         if (auto n = PACKED_SYMBOLS.find(c); n != PACKED_SYMBOLS.npos)
             res.data[i] = n;
         else
-            return (std::string("invalid symbol '") += c) += "'";
+            return ("invalid symbol '"s += c) += "'";
     }
     return res;
 }
@@ -467,13 +471,13 @@ auto parse_packed(std::istream& in)
 template<uint8_t Size>
 auto parse(std::istream& in) -> std::variant<grid<Size>, std::string>
 {
+    using namespace std::literals;
+
     auto res = grid<Size>{};
 
     auto str = std::stringstream{};
     print(res, str);
     auto fmt = std::move(str).str();
-
-    static const auto nums = std::string{ "0123456789" };
 
     int i = 0;
     for (char f : fmt)
@@ -484,15 +488,15 @@ auto parse(std::istream& in) -> std::variant<grid<Size>, std::string>
         switch (f)
         {
             case '.':
-                if (auto n = nums.find(c); n != nums.npos)
+                if (auto n = PACKED_SYMBOLS.find(c); n != PACKED_SYMBOLS.npos)
                     res.data[i++] = n;
                 else
-                    return "invalid number";
+                    return ("invalid number '"s += c) += "'";
                 break;
 
             default:
                 if (f != c)
-                    return "invalid symbol";
+                    return ("invalid symbol '"s += c) += "'";
                 break;
         }
     }
