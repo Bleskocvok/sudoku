@@ -20,8 +20,9 @@
 #include <stdint.h>
 
 
-using fast = uint_fast8_t;  // for iterating over the sudoku grid
-using sud  = uint_fast8_t;  // represents a sudoku digit
+using fast = uint_fast8_t;      // for iterating over the sudoku grid
+using sud  = uint_fast8_t;      // represents a sudoku digit
+using bitset = uint_fast16_t;   // represents a bitset of sudoku digits
 
 
 template <uint8_t Size>
@@ -85,9 +86,9 @@ struct range
 template <uint8_t Size>
 class bag
 {
-    std::array<uint16_t, Size> rows{ 0 };
-    std::array<uint16_t, Size> cols{ 0 };
-    std::array<uint16_t, Size> blks{ 0 };
+    std::array<bitset, Size> rows{ 0 };
+    std::array<bitset, Size> cols{ 0 };
+    std::array<bitset, Size> blks{ 0 };
 
 public:
     constexpr void set(sud x, sud y, sud blk, sud val)
@@ -105,28 +106,28 @@ public:
         return bit_possible(x, y, blk, 0x1 << val);
     }
 
-    constexpr void bit_set(sud x, sud y, sud blk, uint16_t bit)
+    constexpr void bit_set(sud x, sud y, sud blk, bitset bit)
     {
         rows[y]   |= bit;
         cols[x]   |= bit;
         blks[blk] |= bit;
     }
 
-    constexpr void bit_reset(sud x, sud y, sud blk, uint16_t bit)
+    constexpr void bit_reset(sud x, sud y, sud blk, bitset bit)
     {
         rows[y]   ^= bit;
         cols[x]   ^= bit;
         blks[blk] ^= bit;
     }
 
-    constexpr bool bit_possible(sud x, sud y, sud blk, uint16_t bit) const
+    constexpr bool bit_possible(sud x, sud y, sud blk, bitset bit) const
     {
         return ~(rows[y] | cols[x] | blks[blk]) & bit;
     }
 
-    size_t count(sud x, sud y, sud blk) const
+    constexpr size_t count(sud x, sud y, sud blk) const
     {
-        constexpr static auto BITS_COUNT = []()
+        constexpr auto BITS_COUNT = []()
         {
             auto res = std::array<size_t, 256>{ 0 };
             for (size_t n = 0; n < 256; n++)
@@ -135,9 +136,9 @@ public:
             return res;
         }();
 
-        // bitset of all allowed values (included are some additional ones
+        // bitset of all allowed values (included are some additional 1s
         // we don't care about)
-        uint16_t poss = ~(rows[y] | cols[x] | blks[blk]);
+        bitset poss = ~(rows[y] | cols[x] | blks[blk]);
 
         size_t res = 0;
         res += BITS_COUNT[  poss & 0x00ff       ];  // byte one
@@ -151,7 +152,7 @@ public:
 
 
         // size_t res = 0;
-        // uint16_t poss = ~(rows[y] | cols[x] | blks[blk]);
+        // bitset poss = ~(rows[y] | cols[x] | blks[blk]);
         // res += 0 != (poss &   1);
         // res += 0 != (poss &   2);
         // res += 0 != (poss &   4);
@@ -285,7 +286,7 @@ public:
 
         for (sud j : seq)
         {
-            uint16_t bit = 1 << j;
+            bitset bit = 1 << j;
 
             if (!opts.bit_possible(x, y, blk, bit))
                 continue;
