@@ -497,7 +497,8 @@ auto parse(std::istream& in) -> std::variant<grid<Size>, std::string>
 
             default:
                 if (f != c)
-                    return ("invalid symbol '"s += c) += "'";
+                    return (("invalid symbol '"s += c) += "', expected '"s
+                            += f) += "'"s;
                 break;
         }
     }
