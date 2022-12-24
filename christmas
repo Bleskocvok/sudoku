@@ -1,0 +1,37 @@
+#!/bin/sh
+
+make || exit 1
+
+
+izo()
+{
+    sed -e "s/$1/$2/g"
+}
+
+sudok=$(./sudoku generate pretty 45)
+
+echo "$sudok"
+
+echo "$sudok"  \
+    | izo 1 🎄  \
+    | izo 2 🎅  \
+    | izo 3 👼  \
+    | izo 4 🦌  \
+    | izo 5 🌟  \
+    | izo 6 🎁  \
+    | izo 7 🧦  \
+    | izo 8 🔔  \
+    | izo 9 🕯️  \
+    | izo '\.' ". "  \
+    | izo "-------+" "----------+"
+
+# 🎄
+# 🎅
+# 👼
+# 🦌
+# 🌟
+# 🎁
+# 🧦
+# 🔔
+# 🕯️
+
