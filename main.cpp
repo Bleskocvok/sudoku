@@ -19,13 +19,14 @@ int solve(std::istream& input, Parser parser)
     while (input)
     {
         std::getline(input, line);
-        stream.str(std::move(line));
 
         if (line.empty())
             continue;
 
         if (line.front() == '#')
             continue;
+
+        stream.str(std::move(line));
 
         auto res = parser(stream);
 
