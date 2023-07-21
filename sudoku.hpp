@@ -444,6 +444,7 @@ void print_packed(const grid<Size>& g, std::ostream& out)
     for (fast y = 0; y < Size; y++)
         for (fast x = 0; x < Size; x++)
             out << PACKED_SYMBOLS.at(unsigned(g.at(x, y)));
+    out << "\n";
 }
 
 
